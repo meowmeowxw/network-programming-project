@@ -34,6 +34,7 @@ class Router:
 
         def handle_accept(self) -> None:
             client_info = self.accept()
+            print(f"client_info[0]: {client_info[0]}")
             if client_info is not None:
                 self.logger.debug(f"handle_accept() -> {client_info[1]}")
                 ClientHandler(client_info[0], client_info[1])
@@ -43,9 +44,18 @@ class ClientHandler(asyncore.dispatcher):
     def __init__(self, sock, address) -> None:
         asyncore.dispatcher.__init__(self, sock)
         self.logger = logging.getLogger(f"Client -> {address}")
+        self.data_to_write = [b"> welcome back"]
+
+    def writable(self):
+        return bool(self.data_to_write)
 
     def handle_write(self) -> None:
-        pass
+        data = self.data_to_write.pop()
+        sent = self.send(data[:1024])
+        if sent < len(data):
+            remaining = data[sent:]
+            self.data_to_write.append(remaining)
+        self.logger.debug('handle_write() -> (%d) "%s"', sent, data[:sent].rstrip())
 
     def handle_read(self) -> None:
         data = self.recv(1024)

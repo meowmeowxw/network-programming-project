@@ -4,6 +4,7 @@ import asyncore
 import logging
 import socket
 import tkinter
+import threading
 from common import *
 
 
@@ -56,6 +57,7 @@ class Client:
         while True:
             try:
                 data = self.socket.recv(512)
+                self.logger.debug(f"handle_read() -> {data}")
                 self.msg_list.insert(tkinter.END, data)
             except:
                 self.handle_close()
@@ -91,7 +93,9 @@ def main():
     logging.basicConfig(
         level=logging.DEBUG, format="%(name)s:[%(levelname)s]: %(message)s"
     )
-    Client("32:04:0A:EF:19:CF", "92.10.10.15")
+    c = Client("32:04:0A:EF:19:CF", "92.10.10.15")
+    receive_thread = threading.Thread(target=c.handle_read)
+    receive_thread.start()
     tkinter.mainloop()
 
 
