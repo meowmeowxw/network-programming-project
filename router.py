@@ -11,35 +11,21 @@ from common import *
 
 
 class Router:
-    class Router1Eth0(asyncore.dispatcher):
-        mac = mac_to_bytes("55:04:0A:EF:11:CF")
 
-        def __init__(self):
+    mac_eth0 = mac_to_bytes("55:04:0A:EF:11:CF")
+    mac_eth1 = mac_to_bytes("55:04:0A:EF:10:AB")
+
+    def __init__(self):
+        self.RouterEth(8100)
+        self.RouterEth(8200)
+
+    class RouterEth(asyncore.dispatcher):
+        def __init__(self, port):
             asyncore.dispatcher.__init__(self)
-            self.logger = logging.getLogger("Router Eth0")
+            self.logger = logging.getLogger(f"Router {port}")
             self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
             self.set_reuse_addr()
-            self.bind(("localhost", 8200))
-            self.address = self.socket.getsockname()
-            self.logger.debug("binding to %s", self.address)
-            self.listen(5)
-            self.server_addr = ("localhost", 8000)
-
-        def handle_accept(self):
-            client_info = self.accept()
-            if client_info is not None:
-                self.logger.debug(f"handle_accept() -> {client_info[1]}")
-                ClientHandler(client_info[0], client_info[1])
-
-    class Router1Eth1(asyncore.dispatcher):
-        mac = mac_to_bytes("55:04:0A:EF:10:AB")
-
-        def __init__(self):
-            asyncore.dispatcher.__init__(self)
-            self.logger = logging.getLogger("Router Eth1")
-            self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.set_reuse_addr()
-            self.bind(("localhost", 8100))
+            self.bind(("localhost", port))
             self.address = self.socket.getsockname()
             self.logger.debug("binding to %s", self.address)
             self.listen(5)
@@ -73,8 +59,7 @@ def main():
     logging.basicConfig(
         level=logging.DEBUG, format="%(name)s:[%(levelname)s]: %(message)s"
     )
-    Router.Router1Eth0()
-    Router.Router1Eth1()
+    Router()
     asyncore.loop()
 
 
