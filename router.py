@@ -2,29 +2,35 @@
 
 import socket
 import time
+from common import *
 
-router = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-router.bind(("localhost", 8100))
+router_mac = mac_to_bytes("05:10:0A:CB:24:EF")
 
-router_send = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-router_send.bind(("localhost", 8200))
+router_eth1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+router_eth1.bind(("localhost", 8100))
 
-router_mac = "05:10:0A:CB:24:EF"
+router_eth0 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+router_eth0.bind(("localhost", 8200))
 
 server = ("localhost", 8000)
 
-client1_ip = "92.10.10.15"
-client1_mac = "32:04:0A:EF:19:CF"
-client2_ip = "92.10.10.20"
-client2_mac = "10:AF:CB:EF:19:CF"
-client3_ip = "92.10.10.25"
-client3_mac = "AF:04:67:EF:19:DA"
-router_send.listen(4)
+clients = {
+    "92.10.10.15": "32:04:0A:EF:19:CF",
+    "92.10.10.20": "10:AF:CB:EF:19:CF",
+    "92.10.10.25": "AF:04:67:EF:19:DA",
+}
+
+clients = dict((ip_to_bytes(k), mac_to_bytes(v)) for k, v in clients.items())
+print(clients)
+
+"""
+router_eth0.listen(4)
 client1 = None
 client2 = None
 client3 = None
+
 while client1 == None or client2 == None or client3 == None:
-    client, address = router_send.accept()
+    client, address = router_eth0.accept()
 
     if client1 == None:
         client1 = client
@@ -42,9 +48,9 @@ arp_table_mac = {
     client2_ip: client2_mac,
     client3_ip: client3_mac,
 }
-router.connect(server)
+router_eth1.connect(server)
 while True:
-    received_message = router.recv(1024)
+    received_message = router_eth1.recv(1024)
     received_message = received_message.decode("utf-8")
 
     source_mac = received_message[0:17]
@@ -73,3 +79,4 @@ while True:
 
     destination_socket.send(bytes(packet, "utf-8"))
     time.sleep(2)
+"""
