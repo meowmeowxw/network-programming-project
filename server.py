@@ -1,19 +1,50 @@
 #!/usr/bin/env python3
 
 import asyncore
+import logging
 import socket
 from common import *
 
 
 class Server(asyncore.dispatcher):
+    online_clients = {}
+
     def __init__(self) -> None:
         asyncore.dispatcher.__init__(self)
+        self.logger = logging.getLogger("Server: ")
         self.default_gateway = {("localhost", 8200): Mac("55:04:0A:EF:10:AB")}
-        self.online_clients = {}
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
         self.bind(("localhost", 8000))
+        self.logger.debug(f"binding to 8000")
         self.listen(5)
+
+    def handle_accept(self) -> None:
+        client_info = self.accept()
+        if client_info is not None:
+            self.logger.debug(f"handle_accept() -> {client_info[1]}")
+            self.ClientHandler(client_info[0], client_info[1])
+
+    class ClientHandler(asyncore.dispatcher):
+        def __init__(self, sock, address) -> None:
+            asyncore.dispatcher.__init__(self, sock)
+            self.logger = logging.getLogger(f"Client -> {address}")
+            Server.online_clients
+
+        def handle_write(self) -> None:
+            pass
+
+        def handle_read(self) -> None:
+            data = self.recv(1024)
+            self.logger.debug(f"handle_read() -> {len(data)}\t {data}")
+
+        def handle_close(self) -> None:
+            self.logger.debug("handle_close()")
+            self.close()
+
+
+def main():
+    pass
 
 
 """
