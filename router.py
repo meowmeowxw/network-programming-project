@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-import socket
-import select
-import sys
-import time
-import asyncio
 import asyncore
 import logging
+import select
+import socket
+import sys
+import time
+
 from common import *
 
 
@@ -24,8 +24,7 @@ class Router:
             self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
             self.set_reuse_addr()
             self.bind(("localhost", port))
-            self.address = self.socket.getsockname()
-            self.logger.debug("binding to %s", self.address)
+            self.logger.debug(f"binding to {port}")
             self.listen(5)
             self.server_addr = ("localhost", 8000)
 
