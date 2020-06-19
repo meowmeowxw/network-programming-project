@@ -1,19 +1,87 @@
 #!/usr/bin/env python3
 
 import socket
+import select
+import sys
 import time
+import asyncio
+import asyncore
+import logging
 from common import *
 
-router_mac = mac_to_bytes("05:10:0A:CB:24:EF")
 
-router_eth1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-router_eth1.bind(("localhost", 8100))
+class Router:
+    class Router1Eth0(asyncore.dispatcher):
+        mac = mac_to_bytes("55:04:0A:EF:11:CF")
 
-router_eth0 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-router_eth0.bind(("localhost", 8200))
+        def __init__(self):
+            asyncore.dispatcher.__init__(self)
+            self.logger = logging.getLogger("Router Eth0")
+            self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.set_reuse_addr()
+            self.bind(("localhost", 8200))
+            self.address = self.socket.getsockname()
+            self.logger.debug("binding to %s", self.address)
+            self.listen(5)
+            self.server_addr = ("localhost", 8000)
 
-server = ("localhost", 8000)
+        def handle_accept(self):
+            client_info = self.accept()
+            if client_info is not None:
+                self.logger.debug(f"handle_accept() -> {client_info[1]}")
+                ClientHandler(client_info[0], client_info[1])
 
+    class Router1Eth1(asyncore.dispatcher):
+        mac = mac_to_bytes("55:04:0A:EF:10:AB")
+
+        def __init__(self):
+            asyncore.dispatcher.__init__(self)
+            self.logger = logging.getLogger("Router Eth1")
+            self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.set_reuse_addr()
+            self.bind(("localhost", 8100))
+            self.address = self.socket.getsockname()
+            self.logger.debug("binding to %s", self.address)
+            self.listen(5)
+            self.server_addr = ("localhost", 8000)
+
+        def handle_accept(self):
+            client_info = self.accept()
+            if client_info is not None:
+                self.logger.debug(f"handle_accept() -> {client_info[1]}")
+                ClientHandler(client_info[0], client_info[1])
+
+
+class ClientHandler(asyncore.dispatcher):
+    def __init__(self, sock, address):
+        asyncore.dispatcher.__init__(self, sock)
+        self.logger = logging.getLogger(f"Client -> {address}")
+
+    def handle_write(self):
+        pass
+
+    def handle_read(self):
+        data = self.recv(1024)
+        self.logger.debug(f"handle_read() -> {len(data)}\t {data}")
+
+    def handle_close(self):
+        self.logger.debug("handle_close()")
+        self.close()
+
+
+def main():
+    logging.basicConfig(
+        level=logging.DEBUG, format="%(name)s:[%(levelname)s]: %(message)s"
+    )
+    Router.Router1Eth0()
+    Router.Router1Eth1()
+    asyncore.loop()
+
+
+if __name__ == "__main__":
+    main()
+
+"""
 clients = {
     "92.10.10.15": "32:04:0A:EF:19:CF",
     "92.10.10.20": "10:AF:CB:EF:19:CF",
@@ -22,9 +90,9 @@ clients = {
 
 clients = dict((ip_to_bytes(k), mac_to_bytes(v)) for k, v in clients.items())
 print(clients)
+"""
 
 """
-router_eth0.listen(4)
 client1 = None
 client2 = None
 client3 = None
@@ -48,6 +116,9 @@ arp_table_mac = {
     client2_ip: client2_mac,
     client3_ip: client3_mac,
 }
+"""
+
+"""
 router_eth1.connect(server)
 while True:
     received_message = router_eth1.recv(1024)
