@@ -1,0 +1,12 @@
+Client 1, 92.10.10.15, 32:04:0A:EF:19:CF
+Client 2, 92.10.10.20, 10:AF:CB:EF:19:CF
+Client 3, 92.10.10.25, AF:04:67:EF:19:DA
+Client 4, 1.5.10.15, 42:A3:1B:DA:12:AC
+Client 5, 1.5.10.20, 42:A3:5B:DA:13:EF
+Client 6, 1.5.10.30, 44:BF:5B:DA:11:AC
+Router 1 Eth0, 92.10.10.1, 55:04:0A:EF:11:CF
+Router 1 Eth1, 195.1.10.1, 55:04:0A:EF:10:AB
+Router 2 Eth0, 195.1.10.2, 32:03:0A:CF:10:DB
+Router 2 Eth1, 1.5.10.1, 32:03:0A:DA:11:DC
+Server, 195.1.10.10, 52:AB:0A:DF:10:DC
+
