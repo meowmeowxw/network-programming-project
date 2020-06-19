@@ -9,8 +9,6 @@ from common import *
 
 class Client:
     def __init__(self, mac_client: str, ip_client: str) -> None:
-        self.logger = logging.getLogger("Client {Client.ip_client}")
-
         self.mac_client = Mac(mac_client)
         self.ip_client = IP(ip_client)
         self.ip_server = IP("195.1.10.10")
@@ -18,8 +16,10 @@ class Client:
         self.server = ("localhost", 8000)
         self.default_gateway = ("localhost", 8100)
 
+        self.logger = logging.getLogger(f"Client {self.ip_client} ")
+
         self.window = tkinter.Tk()
-        self.window.title(f"{self.ip_client.ip}")
+        self.window.title(f"{self.ip_client}")
         self.messages_frame = tkinter.Frame(self.window)
         self.message = tkinter.StringVar()
         self.message.set("Write here your message")
@@ -38,7 +38,7 @@ class Client:
         self.entry_field.pack()
         # creiamo il tasto invio e lo associamo alla funzione send
         send_button = tkinter.Button(
-            self.window, text="Invio", command=self.send_message
+            self.window, text="Send", command=self.send_message
         )
         # integriamo il tasto nel pacchetto
         send_button.pack()
@@ -49,6 +49,7 @@ class Client:
         self.handle_write()
 
     def handle_close(self):
+        self.logger.debug(f"handle_close()")
         self.socket.close()
 
     def handle_read(self):

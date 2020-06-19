@@ -10,5 +10,5 @@ h = common.header.build(
         # data=b"data".zfill(20),
     )
 )
-print(h)
-print(common.header.parse(h))
+hdr = common.header.parse(h)
+common.pprint(hdr)
