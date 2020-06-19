@@ -4,32 +4,26 @@ import socket
 from construct import Struct, Bytes, Int64un, Array, this, Byte
 
 
-def print_mac(mac: bytes) -> None:
-    print(":".join(f"{bytes([i]).hex()}" for i in mac))
+class Mac:
+    def __init__(self, mac="FF:FF:FF:FF:FF:FF") -> None:
+        self.mac = self.mac_to_bytes(mac)
+
+    def mac_to_bytes(self, mac: str) -> bytes:
+        return bytes.fromhex(mac.replace(":", ""))
+
+    def __str__(self):
+        return ":".join(f"{bytes([i]).hex()}" for i in self.mac)
 
 
-def print_ip(ip: bytes) -> None:
-    print(socket.inet_ntoa(ip))
+class IP:
+    def __init__(self, ip="10.10.10.10") -> None:
+        self.ip = self.ip_to_bytes(ip)
 
+    def ip_to_bytes(self, ip: str) -> bytes:
+        return socket.inet_aton(ip)
 
-def ip_to_bytes(ip: str) -> bytes:
-    return socket.inet_aton(ip)
-
-
-def mac_to_bytes(mac: str) -> bytes:
-    return bytes.fromhex(mac.replace(":", ""))
-
-
-class Layer2:
-    def __init__(self, mac_src: bytes, mac_dst: bytes) -> None:
-        self.mac_src = mac_src
-        self.mac_dst = mac_dst
-
-
-class Layer3:
-    def __init__(self, ip_src: bytes, ip_dst: bytes) -> None:
-        self.ip_src = ip_src
-        self.ip_dst = ip_dst
+    def __str__(self):
+        return socket.inet_ntoa(self.ip)
 
 
 header = Struct(

@@ -11,18 +11,16 @@ from common import *
 
 
 class Router:
-
-    mac_eth0 = mac_to_bytes("55:04:0A:EF:11:CF")
-    mac_eth1 = mac_to_bytes("55:04:0A:EF:10:AB")
-
-    def __init__(self):
-        self.RouterEth(8100)
-        self.RouterEth(8200)
+    def __init__(self) -> None:
+        self.mac_eth0 = Mac("55:04:0A:EF:11:CF")
+        self.mac_eth1 = Mac("55:04:0A:EF:10:AB")
+        self.RouterEth(8100, self.mac_eth0)
+        self.RouterEth(8200, self.mac_eth1)
 
     class RouterEth(asyncore.dispatcher):
-        def __init__(self, port):
+        def __init__(self, port: int, mac: Mac) -> None:
             asyncore.dispatcher.__init__(self)
-            self.logger = logging.getLogger(f"Router {port}")
+            self.logger = logging.getLogger(f"Router {port}\t Mac: {mac}")
             self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
             self.set_reuse_addr()
             self.bind(("localhost", port))
@@ -31,7 +29,7 @@ class Router:
             self.listen(5)
             self.server_addr = ("localhost", 8000)
 
-        def handle_accept(self):
+        def handle_accept(self) -> None:
             client_info = self.accept()
             if client_info is not None:
                 self.logger.debug(f"handle_accept() -> {client_info[1]}")
@@ -39,25 +37,25 @@ class Router:
 
 
 class ClientHandler(asyncore.dispatcher):
-    def __init__(self, sock, address):
+    def __init__(self, sock, address) -> None:
         asyncore.dispatcher.__init__(self, sock)
         self.logger = logging.getLogger(f"Client -> {address}")
 
-    def handle_write(self):
+    def handle_write(self) -> None:
         pass
 
-    def handle_read(self):
+    def handle_read(self) -> None:
         data = self.recv(1024)
         self.logger.debug(f"handle_read() -> {len(data)}\t {data}")
 
-    def handle_close(self):
+    def handle_close(self) -> None:
         self.logger.debug("handle_close()")
         self.close()
 
 
 def main():
     logging.basicConfig(
-        level=logging.DEBUG, format="%(name)s:[%(levelname)s]: %(message)s"
+        level=logging.DEBUG, format="%(name)s\t[%(levelname)s]: %(message)s"
     )
     Router()
     asyncore.loop()
