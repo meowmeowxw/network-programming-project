@@ -7,9 +7,8 @@ import tkinter
 from common import *
 
 
-class Client(asyncore.dispatcher):
+class Client:
     def __init__(self, mac_client: str, ip_client: str) -> None:
-        asyncore.dispatcher.__init__(self)
         self.logger = logging.getLogger("Client {Client.ip_client}")
 
         self.mac_client = Mac(mac_client)
@@ -20,7 +19,6 @@ class Client(asyncore.dispatcher):
         self.default_gateway = ("localhost", 8100)
 
         self.window = tkinter.Tk()
-        self.window.after_idle(poll_asyncore_once)
         self.window.title(f"{self.ip_client.ip}")
         self.messages_frame = tkinter.Frame(self.window)
         self.message = tkinter.StringVar()
@@ -45,33 +43,37 @@ class Client(asyncore.dispatcher):
         # integriamo il tasto nel pacchetto
         send_button.pack()
 
-        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.connect(self.default_gateway)
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.connect(self.default_gateway)
         self.data_to_write = [b"online"]
-
-    def handle_connect(self):
-        pass
+        self.handle_write()
 
     def handle_close(self):
-        self.close()
+        self.socket.close()
 
     def handle_read(self):
-        self.recv(4096)
+        while True:
+            try:
+                data = self.socket.recv(512)
+                self.msg_list.insert(tkinter.END, data)
+            except:
+                self.handle_close()
+                exit(0)
 
-    def writable(self):
-        return bool(self.data_to_write)
-
-    def handle_write(self):
-        data = self.data_to_write.pop()
-        hdr = self.__build_header()
-        sent = self.send(hdr + data)
-        if sent < len(data):
-            remaining = data[sent:]
-            self.data_to_write.append(remaining)
-        self.logger.debug(f"handle_write() -> {sent}: {data[:sent].rstrip()}")
+    def handle_write(self) -> None:
+        while self.data_to_write:
+            data = self.data_to_write.pop()
+            self.msg_list.insert(tkinter.END, data)
+            hdr = self.__build_header()
+            sent = self.socket.send(hdr + data)
+            self.logger.debug(f"handle_write() -> {sent}: {data[:sent].rstrip()}")
+            if sent < len(data):
+                remaining = data[sent:]
+                self.data_to_write.append(remaining)
 
     def send_message(self):
         self.data_to_write.append(self.message.get().encode())
+        self.handle_write()
 
     def __build_header(self):
         return header.build(
@@ -84,16 +86,11 @@ class Client(asyncore.dispatcher):
         )
 
 
-def poll_asyncore_once():
-    asyncore.loop(count=1)
-
-
 def main():
     logging.basicConfig(
         level=logging.DEBUG, format="%(name)s:[%(levelname)s]: %(message)s"
     )
     Client("32:04:0A:EF:19:CF", "92.10.10.15")
-    print("ciaooo")
     tkinter.mainloop()
 
 
