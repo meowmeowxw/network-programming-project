@@ -7,7 +7,7 @@ import socket
 from common import *
 
 online_clients = set()
-
+clients = []
 mac_server = Mac("52:AB:0A:DF:10:DC")
 mac_gateway = Mac("55:04:0A:EF:10:AB")
 ip_server = IP("195.1.10.10")
@@ -28,18 +28,23 @@ class Server(asyncore.dispatcher):
         client_info = self.accept()
         if client_info is not None:
             self.logger.debug(f"handle_accept() -> {client_info[1]}")
-            self.ClientHandler(client_info[0], client_info[1])
+            cl = self.ClientHandler(client_info[0], client_info[1])
+            clients.append(cl)
 
     class ClientHandler(asyncore.dispatcher):
         def __init__(self, sock, address) -> None:
             asyncore.dispatcher.__init__(self, sock)
             self.first_time = True
             self.logger = logging.getLogger(f"Client -> {address}")
+            self.ip_client = None
             # self.data_to_write = [b"Server: welcome back"]
             self.data_to_write = []
 
         def writable(self):
             return bool(self.data_to_write)
+
+        def add_data(self, data: bytes) -> None:
+            self.data_to_write.append(self.__build_header(self.ip_client) + data)
 
         def handle_write(self) -> None:
             data = self.data_to_write.pop()
@@ -57,38 +62,33 @@ class Server(asyncore.dispatcher):
                 f"handle_read() -> {len(data)}\t {print_container(hdr)}\t {payload}"
             )
             self.__parse_message(hdr, payload)
-            """
-            ip_client = IP(hdr.get("ip_src"))
-            online_clients.add(ip_client) if payload == b"online" else None
-            online_clients.remove(ip_client) if payload == b"offline" else None
-            self.data_to_write.append(
-                self.__build_header(ip_client) + f"> welcome {ip_client}".encode()
-            ) if self.first_time else None
-            self.first_time = False
-            """
 
         def handle_close(self) -> None:
             self.logger.debug("handle_close()")
             self.close()
 
         def __parse_message(self, header: Container, data: bytes) -> None:
-            ip_client = IP(header.get("ip_src"))
-            self.data_to_write.append(
-                self.__build_header(ip_client) + f"> welcome {ip_client}".encode()
-            ) if self.first_time else None
-            self.first_time = False
+            if self.first_time:
+                self.ip_client = IP(header.get("ip_src"))
+                self.add_data(f"> welcome {self.ip_client}".encode())
+                for i in clients:
+                    i.add_data(
+                        f"new client: {self.ip_client}".encode()
+                    ) if i != self else None
+                self.first_time = False
 
             if data.startswith(b"online"):
-                online_clients.add(ip_client)
+                online_clients.add(self.ip_client)
             elif data.startswith(b"offline"):
-                online_clients.remove(ip_client)
+                online_clients.remove(self.ip_client)
             elif data.startswith(b"get_clients"):
                 f = ""
                 for i in online_clients:
                     f += str(i) + ","
-                self.data_to_write.append(self.__build_header(ip_client) + f.encode())
+                self.logger.debug(f"online clients: {f}")
+                self.add_data(f.encode())
 
-        def __build_header(self, ip_dst) -> bytes:
+        def __build_header(self, ip_dst: IP) -> bytes:
             return header.build(
                 dict(
                     mac_src=mac_server.mac,
