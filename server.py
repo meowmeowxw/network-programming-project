@@ -29,14 +29,27 @@ class Server(asyncore.dispatcher):
         def __init__(self, sock, address) -> None:
             asyncore.dispatcher.__init__(self, sock)
             self.logger = logging.getLogger(f"Client -> {address}")
-            Server.online_clients
+            self.data_to_write = []
+
+        def writable(self):
+            return bool(self.data_to_write)
 
         def handle_write(self) -> None:
-            pass
+            data = self.data_to_write.pop()
+            sent = self.send(data[:1024])
+            if sent < len(data):
+                remaining = data[sent:]
+                self.data_to_write.append(remaining)
+            self.logger.debug('handle_write() -> (%d) "%s"', sent, data[:sent].rstrip())
 
         def handle_read(self) -> None:
             data = self.recv(1024)
-            self.logger.debug(f"handle_read() -> {len(data)}\t {data}")
+            hdr = header.parse(data)
+            print(hdr)
+            payload = data[header.sizeof() :]
+            self.logger.debug(
+                f"handle_read() -> {len(data)}\t {print_container(hdr)}\t {payload}"
+            )
 
         def handle_close(self) -> None:
             self.logger.debug("handle_close()")
@@ -44,6 +57,15 @@ class Server(asyncore.dispatcher):
 
 
 def main():
+    logging.basicConfig(
+        level=logging.DEBUG, format="%(name)s\t[%(levelname)s]: %(message)s"
+    )
+    Server()
+    asyncore.loop()
+
+
+if __name__ == "__main__":
+    main()
     pass
 
 

@@ -11,4 +11,14 @@ h = common.header.build(
     )
 )
 hdr = common.header.parse(h)
-common.pprint(hdr)
+common.print_container(hdr)
+
+
+m = common.Mac(b"aaaaaa")
+print(m)
+m1 = common.Mac("DF:FF:AB:2E:3F:A4")
+print(m1)
+i = common.IP(b"bbbb")
+i1 = common.IP("192.168.1.1")
+print(i)
+print(i1)
