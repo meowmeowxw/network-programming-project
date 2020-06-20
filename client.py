@@ -3,8 +3,9 @@
 import asyncore
 import logging
 import socket
-import tkinter
 import threading
+import tkinter
+
 from common import *
 
 
@@ -101,4 +102,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

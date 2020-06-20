@@ -2,15 +2,13 @@
 
 import asyncore
 import logging
+import multiprocessing
 import select
 import socket
 import sys
 import time
 import unicodedata
-import multiprocessing
-
 from common import *
-
 
 # arp_table = multiprocessing.Manager().dict()
 arp_table = ARPTable()
@@ -134,4 +132,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

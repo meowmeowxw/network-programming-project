@@ -11,8 +11,6 @@ h = common.header.build(
     )
 )
 hdr = common.header.parse(h)
-common.print_container(hdr)
-
 
 m = common.Mac(b"aaaaaa")
 print(m)
@@ -22,3 +20,5 @@ i = common.IP(b"bbbb")
 i1 = common.IP("192.168.1.1")
 print(i)
 print(i1)
+hh = common.Header(common.header.parse(h))
+print(hh)

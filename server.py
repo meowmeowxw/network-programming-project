@@ -3,8 +3,8 @@
 import asyncore
 import logging
 import socket
-from common import *
 
+from common import *
 
 online_clients = set()
 
@@ -33,6 +33,7 @@ class Server(asyncore.dispatcher):
     class ClientHandler(asyncore.dispatcher):
         def __init__(self, sock, address) -> None:
             asyncore.dispatcher.__init__(self, sock)
+            self.first_time = True
             self.logger = logging.getLogger(f"Client -> {address}")
             # self.data_to_write = [b"Server: welcome back"]
             self.data_to_write = []
@@ -55,16 +56,37 @@ class Server(asyncore.dispatcher):
             self.logger.debug(
                 f"handle_read() -> {len(data)}\t {print_container(hdr)}\t {payload}"
             )
+            self.__parse_message(hdr, payload)
+            """
             ip_client = IP(hdr.get("ip_src"))
             online_clients.add(ip_client) if payload == b"online" else None
             online_clients.remove(ip_client) if payload == b"offline" else None
             self.data_to_write.append(
                 self.__build_header(ip_client) + f"> welcome {ip_client}".encode()
-            )
+            ) if self.first_time else None
+            self.first_time = False
+            """
 
         def handle_close(self) -> None:
             self.logger.debug("handle_close()")
             self.close()
+
+        def __parse_message(self, header: Container, data: bytes) -> None:
+            ip_client = IP(header.get("ip_src"))
+            self.data_to_write.append(
+                self.__build_header(ip_client) + f"> welcome {ip_client}".encode()
+            ) if self.first_time else None
+            self.first_time = False
+
+            if data.startswith(b"online"):
+                online_clients.add(ip_client)
+            elif data.startswith(b"offline"):
+                online_clients.remove(ip_client)
+            elif data.startswith(b"get_clients"):
+                f = ""
+                for i in online_clients:
+                    f += str(i) + ","
+                self.data_to_write.append(self.__build_header(ip_client) + f.encode())
 
         def __build_header(self, ip_dst) -> bytes:
             return header.build(

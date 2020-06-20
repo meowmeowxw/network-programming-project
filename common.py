@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 
-import socket
-from construct import Struct, Bytes, Int64un, Array, this, Byte, Container
-
 import functools
+import socket
+
+from construct import Array, Byte, Bytes, Container, Enum, Int64un, Struct, this
 
 
-def multidispatch(*types):
+def multidispatch_mac(*types):
     def register(function):
         name = function.__name__
-        mm = multidispatch.registry.get(name)
+        mm = multidispatch_mac.registry.get(name)
         if mm is None:
 
             @functools.wraps(function)
@@ -21,7 +21,7 @@ def multidispatch(*types):
                 return function(self, *args)
 
             wrapper.typemap = {}
-            mm = multidispatch.registry[name] = wrapper
+            mm = multidispatch_mac.registry[name] = wrapper
         if types in mm.typemap:
             raise TypeError("duplicate registration")
         mm.typemap[types] = function
@@ -54,16 +54,16 @@ def multidispatch_ip(*types):
     return register
 
 
-multidispatch.registry = {}
+multidispatch_mac.registry = {}
 multidispatch_ip.registry = {}
 
 
 class Mac:
-    @multidispatch(str)
+    @multidispatch_mac(str)
     def __init__(self, mac) -> None:
         self.mac = self.__mac_to_bytes(mac)
 
-    @multidispatch(bytes)
+    @multidispatch_mac(bytes)
     def __init__(self, mac) -> None:
         self.mac = mac
 
@@ -121,4 +121,28 @@ header = Struct(
     "ip_src" / Bytes(4),
     "ip_dst" / Bytes(4),
 )
+
+message = Struct(Enum(Byte, online=1, offline=2, message=3))
+
+
+class Header(Container):
+    def __setitem__(self, key, item):
+        self.__dict__[key] = item
+
+    def __getitem__(self, key):
+        return self.__dict__[key]
+
+    def __str__(self):
+        first_time = True
+        s = ""
+        for k, v in self.__dict__.items():
+            if first_time:
+                first_time = False
+                continue
+            if len(v) == 6:
+                s += f"{k}: {Mac(v)} | "
+            else:
+                s += f"{k}: {IP(v)} | "
+        return s
+
 
