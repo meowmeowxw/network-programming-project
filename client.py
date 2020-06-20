@@ -78,7 +78,7 @@ class Client:
         self.data_to_write.append(self.message.get().encode())
         self.handle_write()
 
-    def __build_header(self):
+    def __build_header(self) -> bytes:
         return header.build(
             dict(
                 mac_src=self.mac_client.mac,

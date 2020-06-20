@@ -101,14 +101,6 @@ class ARPTable(dict):
         return "".join(f"{Mac(k)} | {IP(v)}\t" for k, v in self.__dict__.items())
 
 
-def mac_to_str(mac: bytes) -> str:
-    return ":".join(f"{bytes([i]).hex()}" for i in mac)
-
-
-def ip_to_str(ip: bytes) -> str:
-    return socket.inet_ntoa(ip)
-
-
 def print_container(hdr: Container) -> str:
     first_time = True
     s = ""

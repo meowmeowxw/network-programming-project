@@ -6,9 +6,14 @@ import socket
 from common import *
 
 
-class Server(asyncore.dispatcher):
-    online_clients = {}
+online_clients = set()
 
+mac_server = Mac("52:AB:0A:DF:10:DC")
+mac_gateway = Mac("55:04:0A:EF:10:AB")
+ip_server = IP("195.1.10.10")
+
+
+class Server(asyncore.dispatcher):
     def __init__(self) -> None:
         asyncore.dispatcher.__init__(self)
         self.logger = logging.getLogger("Server: ")
@@ -29,6 +34,7 @@ class Server(asyncore.dispatcher):
         def __init__(self, sock, address) -> None:
             asyncore.dispatcher.__init__(self, sock)
             self.logger = logging.getLogger(f"Client -> {address}")
+            # self.data_to_write = [b"Server: welcome back"]
             self.data_to_write = []
 
         def writable(self):
@@ -45,15 +51,28 @@ class Server(asyncore.dispatcher):
         def handle_read(self) -> None:
             data = self.recv(1024)
             hdr = header.parse(data)
-            print(hdr)
             payload = data[header.sizeof() :]
             self.logger.debug(
                 f"handle_read() -> {len(data)}\t {print_container(hdr)}\t {payload}"
             )
+            ip_client = IP(hdr.get("ip_src"))
+            online_clients.add(ip_client) if payload == b"online" else None
+            online_clients.remove(ip_client) if payload == b"offline" else None
+            self.data_to_write.append(self.__build_header(ip_client) + b"> welcome")
 
         def handle_close(self) -> None:
             self.logger.debug("handle_close()")
             self.close()
+
+        def __build_header(self, ip_dst) -> bytes:
+            return header.build(
+                dict(
+                    mac_src=mac_server.mac,
+                    mac_dst=mac_gateway.mac,
+                    ip_src=ip_server.ip,
+                    ip_dst=ip_dst.ip,
+                )
+            )
 
 
 def main():
@@ -66,44 +85,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    pass
-
-
-"""
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind(("localhost", 8000))
-server.listen(2)
-server_ip = "92.10.10.10"
-server_mac = "00:00:0A:BB:28:FC"
-router_mac = "05:10:0A:CB:24:EF"
-while True:
-    routerConnection, address = server.accept()
-    if routerConnection != None:
-        print(routerConnection)
-        break
-while True:
-    ethernet_header = ""
-    IP_header = ""
-
-    message = input("\nEnter the text message to send: ")
-    destination_ip = input(
-        "Enter the IP of the clients to send the message to:\n1. 92.10.10.15\n2. 92.10.10.20\n3. 92.10.10.25\n"
-    )
-    if (
-        destination_ip == "92.10.10.15"
-        or destination_ip == "92.10.10.20"
-        or destination_ip == "92.10.10.25"
-    ):
-        source_ip = server_ip
-        IP_header = IP_header + source_ip + destination_ip
-
-        source_mac = server_mac
-        destination_mac = router_mac
-        ethernet_header = ethernet_header + source_mac + destination_mac
-
-        packet = ethernet_header + IP_header + message
-
-        routerConnection.send(bytes(packet, "utf-8"))
-    else:
-        print("Wrong client IP inputted")
-"""

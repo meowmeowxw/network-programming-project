@@ -14,6 +14,7 @@ from common import *
 
 # arp_table = multiprocessing.Manager().dict()
 arp_table = ARPTable()
+clients = []
 
 
 class Router:
@@ -36,6 +37,7 @@ class Router:
 
         def handle_accept(self) -> None:
             client_info = self.accept()
+            clients.append(client_info[0])
             print(f"client_info[0]: {client_info[0]}")
             if client_info is not None:
                 self.logger.debug(f"handle_accept() -> {client_info[1]}")
@@ -46,7 +48,7 @@ class ClientHandler(asyncore.dispatcher):
     def __init__(self, sock, address) -> None:
         asyncore.dispatcher.__init__(self, sock)
         self.logger = logging.getLogger(f"Client -> {address}")
-        self.data_to_write = [b"> welcome back"]
+        self.data_to_write = []
         self.server_addr = ("localhost", 8000)
 
     def writable(self):
@@ -75,9 +77,8 @@ class ClientHandler(asyncore.dispatcher):
             if ip_src != arp_table.get(mac_src):
                 self.logger.debug(f"MAC Spoofing detected -> {IP(ip_src)}")
 
-        mac_dst = hdr.get("mac_dst")
         hdr["mac_dst"] = Mac("52:AB:0A:DF:10:DC").mac
-        ip_dst = hdr.get("ip_dst")
+        hdr["mac_src"] = Mac("55:04:0A:EF:10:AB").mac
         self.logger.debug(f"ARP Table: {arp_table}")
         self.logger.debug(f"Packet new: {print_container(hdr)}")
         srv_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -113,6 +114,7 @@ class ServerHandler(asyncore.dispatcher):
         self.logger.debug(
             f"handle_read() -> {len(data)}\t {print_container(hdr)}\t {payload}"
         )
+        clients[0].send(data)
 
     def handle_close(self) -> None:
         self.logger.debug("handle_close()")
