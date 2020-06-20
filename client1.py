@@ -1,8 +1,8 @@
-
 import asyncore
 import logging
 import socket
 import tkinter
+import threading
 from common import *
 
 
@@ -90,7 +90,9 @@ def main():
     logging.basicConfig(
         level=logging.DEBUG, format="%(name)s:[%(levelname)s]: %(message)s"
     )
-    Client("32:05:0A:FF:19:CF", "92.10.10.16")
+    c = Client("32:05:0A:FF:19:CF", "92.10.10.16")
+    receive_thread = threading.Thread(target=c.handle_read)
+    receive_thread.start()
     tkinter.mainloop()
 
 

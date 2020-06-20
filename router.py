@@ -50,6 +50,9 @@ class ClientHandler(asyncore.dispatcher):
         self.logger = logging.getLogger(f"Client -> {address}")
         self.data_to_write = []
         self.server_addr = ("localhost", 8000)
+        srv_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        srv_socket.connect(self.server_addr)
+        self.server = ServerHandler(srv_socket, self)
 
     def writable(self):
         return bool(self.data_to_write)
@@ -81,20 +84,19 @@ class ClientHandler(asyncore.dispatcher):
         hdr["mac_src"] = Mac("55:04:0A:EF:10:AB").mac
         self.logger.debug(f"ARP Table: {arp_table}")
         self.logger.debug(f"Packet new: {print_container(hdr)}")
-        srv_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        srv_socket.connect(self.server_addr)
-        ServerHandler(srv_socket, header.build(hdr) + payload)
+        self.server.data_to_write.append(header.build(hdr) + payload)
         # self.connect(self.server_addr)
         # self.send(header.build(hdr) + payload)
 
 
 class ServerHandler(asyncore.dispatcher):
-    def __init__(self, sock, data) -> None:
+    def __init__(self, sock, handler: ClientHandler) -> None:
         asyncore.dispatcher.__init__(self, sock)
+        self.client = handler
         self.logger = logging.getLogger(f"Router -> Server")
         self.data_to_write = [b"> welcome back"]
         self.server_addr = ("localhost", 8000)
-        self.data_to_write = [data]
+        self.data_to_write = []
 
     def writable(self):
         return bool(self.data_to_write)
@@ -114,7 +116,8 @@ class ServerHandler(asyncore.dispatcher):
         self.logger.debug(
             f"handle_read() -> {len(data)}\t {print_container(hdr)}\t {payload}"
         )
-        clients[0].send(data)
+        self.client.data_to_write.append(payload)
+        # clients[0].send(data)
 
     def handle_close(self) -> None:
         self.logger.debug("handle_close()")

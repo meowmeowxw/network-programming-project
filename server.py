@@ -58,7 +58,9 @@ class Server(asyncore.dispatcher):
             ip_client = IP(hdr.get("ip_src"))
             online_clients.add(ip_client) if payload == b"online" else None
             online_clients.remove(ip_client) if payload == b"offline" else None
-            self.data_to_write.append(self.__build_header(ip_client) + b"> welcome")
+            self.data_to_write.append(
+                self.__build_header(ip_client) + f"> welcome {ip_client}".encode()
+            )
 
         def handle_close(self) -> None:
             self.logger.debug("handle_close()")
