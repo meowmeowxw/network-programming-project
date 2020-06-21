@@ -82,11 +82,19 @@ class Server(asyncore.dispatcher):
             elif data.startswith(b"offline"):
                 online_clients.remove(self.ip_client)
             elif data.startswith(b"get_clients"):
-                f = ""
-                for i in online_clients:
-                    f += str(i) + ","
-                self.logger.debug(f"online clients: {f}")
+                f = ",".join(str(i) for i in online_clients)
                 self.add_data(f.encode())
+            elif data.startswith(b"message:"):
+                splitted = data.split(b",")
+                #self.logger.debug(f"sending {splitted}")
+                #self.logger.debug(f"{splitted[0].decode().replace("message")})
+                ip_dst = IP(splitted[0].decode().replace("message:", ""))
+                data_to_send = splitted[1]
+                self.logger.debug(f"sending {data_to_send} to {ip_dst}")
+                for i in clients:
+                    self.logger.debug(f"{i.ip_client}")
+                    if i.ip_client.ip == ip_dst.ip:
+                        i.add_data(b"> " + str(ip_dst).encode() + b": " + data_to_send)
 
         def __build_header(self, ip_dst: IP) -> bytes:
             return header.build(

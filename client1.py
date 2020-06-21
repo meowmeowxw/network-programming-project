@@ -21,7 +21,7 @@ class Client:
         self.window.title(f"{self.ip_client}")
         self.messages_frame = tkinter.Frame(self.window)
         self.message = tkinter.StringVar()
-        self.message.set("Write here your message")
+        #self.message.set("Write here your message")
         self.scrollbar = tkinter.Scrollbar(self.messages_frame)
         self.msg_list = tkinter.Listbox(
             self.messages_frame, height=15, width=50, yscrollcommand=self.scrollbar.set
