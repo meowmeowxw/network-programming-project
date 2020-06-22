@@ -8,24 +8,26 @@ import socket
 import sys
 import time
 import unicodedata
-
 from common import *
 
 # arp_table = multiprocessing.Manager().dict()
 arp_table = ARPTable()
-routing_table = {}
 clients = []
 
 
 class Router:
     def __init__(self) -> None:
-        self.mac_eth0 = Mac("55:04:0A:EF:11:CF")
-        self.mac_eth1 = Mac("55:04:0A:EF:10:AB")
-        self.RouterEth(8100, self.mac_eth0)
-        self.RouterEth(8200, self.mac_eth1)
+        self.mac_eth0 = Mac("32:03:0A:CF:10:DB")
+        self.ip_eth0 = IP("195.1.10.2")
+
+        self.mac_eth1 = Mac("32:03:0A:DA:11:DC")
+        self.ip_eth1 = IP("1.5.10.1")
+
+        self.RouterEth(8300, self.mac_eth0, self.ip_eth0)
+        self.RouterEth(8400, self.mac_eth1, self.ip_eth1)
 
     class RouterEth(asyncore.dispatcher):
-        def __init__(self, port: int, mac: Mac) -> None:
+        def __init__(self, port: int, mac: Mac, ip: IP) -> None:
             asyncore.dispatcher.__init__(self)
             self.logger = logging.getLogger(f"Router {port}\t Mac: {mac}")
             self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -34,7 +36,8 @@ class Router:
             self.logger.debug(f"binding to {port}")
             self.listen(5)
             self.server_addr = ("localhost", 8000)
-            self.router_addr = ("localhost", 8300)
+            self.mac = mac
+            self.ip = ip
 
         def handle_accept(self) -> None:
             client_info = self.accept()
