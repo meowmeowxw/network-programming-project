@@ -11,9 +11,14 @@ import unicodedata
 
 from common import *
 
-# arp_table = multiprocessing.Manager().dict()
 arp_table = ARPTable()
-routing_table = {}
+# IP destination <----> Socket, MAC destination, MAC src
+routing_table = {
+    IP("195.1.10.10").ip: (("localhost", 8000), Mac("52:AB:0A:DF:10:DC"), Mac("55:04:0A:EF:10:AB")),
+    IP("1.5.10.0").ip: (("localhost", 8300), Mac("32:03:0A:CF:10:DB"), Mac("55:04:0A:EF:10:AB")),
+    IP("195.1.10.2").ip: (("localhost", 8300), Mac("32:03:0A:CF:10:DB"), Mac("55:04:0A:EF:10:AB")),
+    IP("92.10.10.0").ip: (("localhost", 8100), Mac("55:04:0A:EF:11:CF"), Mac("55:04:0A:EF:11:CF"))
+}
 clients = []
 
 
@@ -50,10 +55,7 @@ class ClientHandler(asyncore.dispatcher):
         asyncore.dispatcher.__init__(self, sock)
         self.logger = logging.getLogger(f"Client -> {address}")
         self.data_to_write = []
-        self.server_addr = ("localhost", 8000)
-        srv_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        srv_socket.connect(self.server_addr)
-        self.server = ServerHandler(srv_socket, self)
+        self.first_time = True
 
     def writable(self):
         return bool(self.data_to_write)
@@ -81,14 +83,21 @@ class ClientHandler(asyncore.dispatcher):
             if ip_src != arp_table.get(mac_src):
                 self.logger.debug(f"MAC Spoofing detected -> {IP(ip_src)}")
 
-        hdr["mac_dst"] = Mac("52:AB:0A:DF:10:DC").mac
-        hdr["mac_src"] = Mac("55:04:0A:EF:10:AB").mac
+        ip_dst = IP(hdr.get("ip_dst"))
+        if self.first_time:
+            sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            print(f"ip_dst: {ip_dst.ip}")
+            print(f"routing_table: {routing_table}")
+            print(routing_table.get(ip_dst.ip))
+            sck.connect(routing_table.get(ip_dst.ip)[0])
+            self.server = ServerHandler(sck, self)
+            self.first_time = False
+
+        hdr["mac_dst"] = routing_table.get(ip_dst.ip)[1].mac
+        hdr["mac_src"] = routing_table.get(ip_dst.ip)[2].mac
         self.logger.debug(f"ARP Table: {arp_table}")
         self.logger.debug(f"Packet new: {print_container(hdr)}")
         self.server.data_to_write.append(header.build(hdr) + payload)
-        # self.connect(self.server_addr)
-        # self.send(header.build(hdr) + payload)
-
 
 class ServerHandler(asyncore.dispatcher):
     def __init__(self, sock, handler: ClientHandler) -> None:
@@ -118,7 +127,6 @@ class ServerHandler(asyncore.dispatcher):
             f"handle_read() -> {len(data)}\t {print_container(hdr)}\t {payload}"
         )
         self.client.data_to_write.append(payload)
-        # clients[0].send(data)
 
     def handle_close(self) -> None:
         self.logger.debug("handle_close()")
