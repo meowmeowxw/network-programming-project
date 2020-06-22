@@ -45,6 +45,14 @@ class Client:
         # integriamo il tasto nel pacchetto
         send_button.pack()
 
+        """
+        self.options = tkinter.Listbox(self.window)
+        self.options.insert(1, "online")
+        self.options.insert(2, "offline")
+        self.options.insert(3, "message")
+        self.options.pack()
+        """
+
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect(self.default_gateway)
         self.data_to_write = [b"online"]

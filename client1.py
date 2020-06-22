@@ -55,6 +55,7 @@ class Client:
         while True:
             try:
                 data = self.socket.recv(512)
+                self.logger.debug(f"handle_read() -> {data}")
                 self.msg_list.insert(tkinter.END, data)
             except:
                 self.handle_close()
@@ -90,7 +91,7 @@ def main():
     logging.basicConfig(
         level=logging.DEBUG, format="%(name)s:[%(levelname)s]: %(message)s"
     )
-    c = Client("32:05:0A:FF:19:CF", "92.10.10.16")
+    c = Client("32:05:0A:FF:19:CF", "92.10.10.20")
     receive_thread = threading.Thread(target=c.handle_read)
     receive_thread.start()
     tkinter.mainloop()

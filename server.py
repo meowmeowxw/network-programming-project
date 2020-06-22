@@ -86,15 +86,19 @@ class Server(asyncore.dispatcher):
                 self.add_data(f.encode())
             elif data.startswith(b"message:"):
                 splitted = data.split(b",")
-                #self.logger.debug(f"sending {splitted}")
-                #self.logger.debug(f"{splitted[0].decode().replace("message")})
                 ip_dst = IP(splitted[0].decode().replace("message:", ""))
                 data_to_send = splitted[1]
                 self.logger.debug(f"sending {data_to_send} to {ip_dst}")
                 for i in clients:
-                    self.logger.debug(f"{i.ip_client}")
                     if i.ip_client.ip == ip_dst.ip:
-                        i.add_data(b"> " + str(ip_dst).encode() + b": " + data_to_send)
+                        self.logger.debug(f"{i.ip_client}")
+                        i.add_data(b"> " + str(self.ip_client).encode() + b": " + data_to_send)
+            elif data.startswith(b"broadcast:"):
+                data_to_send = data.split(b":")[1]
+                for i in clients:
+                    if i != self:
+                        i.add_data(b"> " + str(self.ip_client).encode() + b": " + data_to_send)
+
 
         def __build_header(self, ip_dst: IP) -> bytes:
             return header.build(
