@@ -26,7 +26,9 @@ class Client:
         self.window.title(f"{self.ip_client}")
         self.messages_frame = tkinter.Frame(self.window)
         self.message = tkinter.StringVar()
-        # self.message.set("Write here your message")
+        self.to_ip = tkinter.StringVar()
+        self.to_ip.set("Write here client ip, message option must be selected")
+        self.message.set("Write here your message")
         self.scrollbar = tkinter.Scrollbar(self.messages_frame)
         self.msg_list = tkinter.Listbox(
             self.messages_frame, height=15, width=50, yscrollcommand=self.scrollbar.set
@@ -35,7 +37,11 @@ class Client:
         self.msg_list.pack(side=tkinter.LEFT, fill=tkinter.BOTH)
         self.msg_list.pack()
         self.messages_frame.pack()
-        self.entry_field = tkinter.Entry(self.window, textvariable=self.message)
+        self.entry_field = tkinter.Entry(
+            self.window, width=80, textvariable=self.message
+        )
+        self.entry_ip = tkinter.Entry(self.window, width=80, textvariable=self.to_ip)
+        self.entry_ip.pack()
         # leghiamo la funzione send al tasto Return
         self.entry_field.bind("<Return>", self.send_message)
 
@@ -47,13 +53,13 @@ class Client:
         # integriamo il tasto nel pacchetto
         send_button.pack()
 
-        """
         self.options = tkinter.Listbox(self.window)
         self.options.insert(1, "online")
         self.options.insert(2, "offline")
-        self.options.insert(3, "message")
+        self.options.insert(3, "get_clients")
+        self.options.insert(4, "message")
+        self.options.insert(5, "broadcast")
         self.options.pack()
-        """
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect(self.default_gateway)
@@ -86,7 +92,13 @@ class Client:
                 self.data_to_write.append(remaining)
 
     def send_message(self):
-        self.data_to_write.append(self.message.get().encode())
+        sel = self.options.get(self.options.curselection()[0])
+        print(f"{self.to_ip.get()}")
+        if sel == "message":
+            sel += ":" + self.to_ip.get() + "," + self.message.get()
+        elif sel == "broadcast":
+            sel += ":" + self.message.get()
+        self.data_to_write.append(sel.encode())
         self.handle_write()
 
     def __build_header(self) -> bytes:

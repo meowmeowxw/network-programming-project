@@ -90,18 +90,20 @@ class ClientHandler(asyncore.dispatcher):
         ip_dst = IP(hdr.get("ip_dst"))
         if self.first_time:
             sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.logger.debug(f"connecting to {ip_dst}")
-            sck.connect(routing_table.get(ip_dst.ip)[0])
+            dst = routing_table.get(ip_dst.ip)
+            self.logger.debug(f"connecting to {ip_dst} using {dst[0]}")
+            # In router2 this is the router1eth1 -> (localhost, 8100)
+            sck.connect(dst[0])
             self.server = ServerHandler(sck, self)
             self.first_time = False
 
-        tmp = routing_table.get(ip_dst.ip, None)
-        if tmp == None:
+        info_dst = routing_table.get(ip_dst.ip, None)
+        if info_dst == None:
             mac_dst = routing_table.get(ip_dst.ip[:-1])[1].mac
             mac_src = routing_table.get(ip_dst.ip[:-1])[2].mac
         else:
-            mac_dst = tmp[1].mac
-            mac_src = tmp[2].mac
+            mac_dst = info_dst[1].mac
+            mac_src = info_dst[2].mac
         hdr["mac_dst"] = mac_dst
         hdr["mac_src"] = mac_src
         self.logger.debug(f"ARP Table: {arp_table}")

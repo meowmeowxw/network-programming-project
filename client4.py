@@ -89,6 +89,11 @@ class Client:
         )
 
 
+class GUI:
+    def __init__(self, client: Client) -> None:
+        self.client = client
+
+
 def main():
     logging.basicConfig(
         level=logging.DEBUG, format="%(name)s:[%(levelname)s]: %(message)s"
