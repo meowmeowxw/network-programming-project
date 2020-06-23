@@ -8,26 +8,35 @@ import socket
 import sys
 import time
 import unicodedata
+
 from common import *
 
-# arp_table = multiprocessing.Manager().dict()
 arp_table = ARPTable()
+# IP destination <----> Socket, MAC destination, MAC src
+routing_table = {
+    IP("195.1.10.10").ip: (
+        ("localhost", 8200),
+        Mac("55:04:0A:EF:10:AB"),
+        Mac("32:03:0A:CF:10:DB"),
+    ),
+    IP("92.10.10").ip: (
+        ("localhost", 8200),
+        Mac("55:04:0A:EF:10:AB"),
+        Mac("32:03:0A:CF:10:DB"),
+    ),
+}
 clients = []
 
 
 class Router:
     def __init__(self) -> None:
         self.mac_eth0 = Mac("32:03:0A:CF:10:DB")
-        self.ip_eth0 = IP("195.1.10.2")
-
         self.mac_eth1 = Mac("32:03:0A:DA:11:DC")
-        self.ip_eth1 = IP("1.5.10.1")
-
-        self.RouterEth(8300, self.mac_eth0, self.ip_eth0)
-        self.RouterEth(8400, self.mac_eth1, self.ip_eth1)
+        self.RouterEth(8300, self.mac_eth0)
+        self.RouterEth(8400, self.mac_eth1)
 
     class RouterEth(asyncore.dispatcher):
-        def __init__(self, port: int, mac: Mac, ip: IP) -> None:
+        def __init__(self, port: int, mac: Mac) -> None:
             asyncore.dispatcher.__init__(self)
             self.logger = logging.getLogger(f"Router {port}\t Mac: {mac}")
             self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -35,9 +44,6 @@ class Router:
             self.bind(("localhost", port))
             self.logger.debug(f"binding to {port}")
             self.listen(5)
-            self.server_addr = ("localhost", 8000)
-            self.mac = mac
-            self.ip = ip
 
         def handle_accept(self) -> None:
             client_info = self.accept()
@@ -53,10 +59,7 @@ class ClientHandler(asyncore.dispatcher):
         asyncore.dispatcher.__init__(self, sock)
         self.logger = logging.getLogger(f"Client -> {address}")
         self.data_to_write = []
-        self.server_addr = ("localhost", 8000)
-        srv_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        srv_socket.connect(self.server_addr)
-        self.server = ServerHandler(srv_socket, self)
+        self.first_time = True
 
     def writable(self):
         return bool(self.data_to_write)
@@ -84,22 +87,33 @@ class ClientHandler(asyncore.dispatcher):
             if ip_src != arp_table.get(mac_src):
                 self.logger.debug(f"MAC Spoofing detected -> {IP(ip_src)}")
 
-        hdr["mac_dst"] = Mac("52:AB:0A:DF:10:DC").mac
-        hdr["mac_src"] = Mac("55:04:0A:EF:10:AB").mac
+        ip_dst = IP(hdr.get("ip_dst"))
+        if self.first_time:
+            sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.logger.debug(f"connecting to {ip_dst}")
+            sck.connect(routing_table.get(ip_dst.ip)[0])
+            self.server = ServerHandler(sck, self)
+            self.first_time = False
+
+        tmp = routing_table.get(ip_dst.ip, None)
+        if tmp == None:
+            mac_dst = routing_table.get(ip_dst.ip[:-1])[1].mac
+            mac_src = routing_table.get(ip_dst.ip[:-1])[2].mac
+        else:
+            mac_dst = tmp[1].mac
+            mac_src = tmp[2].mac
+        hdr["mac_dst"] = mac_dst
+        hdr["mac_src"] = mac_src
         self.logger.debug(f"ARP Table: {arp_table}")
         self.logger.debug(f"Packet new: {print_container(hdr)}")
         self.server.data_to_write.append(header.build(hdr) + payload)
-        # self.connect(self.server_addr)
-        # self.send(header.build(hdr) + payload)
 
 
 class ServerHandler(asyncore.dispatcher):
     def __init__(self, sock, handler: ClientHandler) -> None:
         asyncore.dispatcher.__init__(self, sock)
         self.client = handler
-        self.logger = logging.getLogger(f"Router -> Server")
-        self.data_to_write = [b"> welcome back"]
-        self.server_addr = ("localhost", 8000)
+        self.logger = logging.getLogger(f"Router -> Router/Server")
         self.data_to_write = []
 
     def writable(self):
@@ -120,8 +134,8 @@ class ServerHandler(asyncore.dispatcher):
         self.logger.debug(
             f"handle_read() -> {len(data)}\t {print_container(hdr)}\t {payload}"
         )
-        self.client.data_to_write.append(payload)
-        # clients[0].send(data)
+        self.logger.debug(f"adding data to write {data}\n")
+        self.client.data_to_write.append(data)
 
     def handle_close(self) -> None:
         self.logger.debug("handle_close()")

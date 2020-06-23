@@ -3,7 +3,6 @@
 import asyncore
 import logging
 import socket
-import sys
 import threading
 import tkinter
 
@@ -11,14 +10,12 @@ from common import *
 
 
 class Client:
-    def __init__(
-        self, mac_client: str, ip_client: str, mac_gateway: str, gateway_port: str
-    ) -> None:
+    def __init__(self, mac_client: str, ip_client: str) -> None:
         self.mac_client = Mac(mac_client)
         self.ip_client = IP(ip_client)
         self.ip_server = IP("195.1.10.10")
-        self.mac_gateway = Mac(mac_gateway)
-        self.default_gateway = ("localhost", int(gateway_port))
+        self.mac_gateway = Mac("32:03:0A:DA:11:DC")
+        self.default_gateway = ("localhost", 8400)
 
         self.logger = logging.getLogger(f"Client {self.ip_client} ")
 
@@ -47,14 +44,6 @@ class Client:
         # integriamo il tasto nel pacchetto
         send_button.pack()
 
-        """
-        self.options = tkinter.Listbox(self.window)
-        self.options.insert(1, "online")
-        self.options.insert(2, "offline")
-        self.options.insert(3, "message")
-        self.options.pack()
-        """
-
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect(self.default_gateway)
         self.data_to_write = [b"online"]
@@ -69,7 +58,7 @@ class Client:
             try:
                 data = self.socket.recv(512)
                 self.logger.debug(f"handle_read() -> {data}")
-                self.msg_list.insert(tkinter.END, data[header.sizeof() :])
+                self.msg_list.insert(tkinter.END, data)
             except:
                 self.handle_close()
                 exit(0)
@@ -101,14 +90,10 @@ class Client:
 
 
 def main():
-    if len(sys.argv) != 5:
-        sys.stderr.write("Usage: python client.py MAC IP GATEWAY_MAC GATEWAY_PORT\n")
-        exit(1)
-
     logging.basicConfig(
         level=logging.DEBUG, format="%(name)s:[%(levelname)s]: %(message)s"
     )
-    c = Client(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+    c = Client("42:A3:1B:DA:12:AC", "1.5.10.15")
     receive_thread = threading.Thread(target=c.handle_read)
     receive_thread.start()
     tkinter.mainloop()
