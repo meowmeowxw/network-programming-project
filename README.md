@@ -2,14 +2,15 @@
 
 ![](./design.png)
 
-Per lanciare tutti i componenti presenti nel disegno di rete, ho creato lo script
-[launcher.sh](./launcher.sh), testato su arch linux 5.7.3-arch1-1 x86-64.
+Per lanciare tutti i componenti presenti nel disegno di rete ho creato lo script
+[launcher.sh](./launcher.sh), testato su arch linux 5.7.3-arch1-1 x86-64 e versione
+python: 3.8.3
 
 ## Librerie
 
 Le librerie esterne usate sono [construct](https://pypi.org/project/construct/)
 
-`pip install --user construct`
+`pip install -r requirements.txt`
 
 Questa libreria mi permette di fare un parsing efficace dei pacchetti del tipo:
 
@@ -23,7 +24,7 @@ Ogni client ha una semplice GUI, le opzioni sono:
 
 1. Online -> Si riferisce al server che il client è online, questo pacchetto è mandato di default all'avvio del client.
 2. Offline -> Si riferisce al server che il client è offline.
-3. Get Clients -> Si richiede al servere la lista dei client online.
+3. Get Clients -> Si richiede al server la lista dei client online.
 4. Message -> Si può mandare un messaggio privato a un altro client, in una textbox è necessario inserire il messaggio da mandare e nell'altra l'IP del client di destinazione.
 5. Broadcast -> Si può mandare un messaggio a tutti i client online.
 

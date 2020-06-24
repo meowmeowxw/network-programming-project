@@ -31,7 +31,7 @@ class Client:
         self.message.set("Write here your message")
         self.scrollbar = tkinter.Scrollbar(self.messages_frame)
         self.msg_list = tkinter.Listbox(
-            self.messages_frame, height=15, width=50, yscrollcommand=self.scrollbar.set
+            self.messages_frame, height=15, width=80, yscrollcommand=self.scrollbar.set
         )
         self.scrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
         self.msg_list.pack(side=tkinter.LEFT, fill=tkinter.BOTH)

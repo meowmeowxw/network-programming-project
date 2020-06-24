@@ -1,6 +1,6 @@
 #!/bin/sh
 
-python router.py &
+python router1.py &
 sleep 0.5
 python router2.py &
 sleep 0.5
@@ -15,3 +15,5 @@ sleep 0.5
 python client-args.py 42:A3:1B:DA:12:AC 1.5.10.15 32:03:0A:DA:11:DC 8400 &
 sleep 0.5
 python client-args.py 42:A3:5B:DA:13:EF 1.5.10.20 32:03:0A:DA:11:DC 8400 &
+sleep 0.5
+python client-args.py 44:BF:5B:DA:11:AC 1.5.10.30 32:03:0A:DA:11:DC 8400 &

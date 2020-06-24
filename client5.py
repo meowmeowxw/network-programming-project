@@ -116,7 +116,7 @@ def main():
     logging.basicConfig(
         level=logging.DEBUG, format="%(name)s:[%(levelname)s]: %(message)s"
     )
-    c = Client("32:04:0A:EF:19:CF", "92.10.10.15", "55:04:0A:EF:11:CF", 8100)
+    c = Client("32:A3:5B:DA:13:EF", "1.5.10.20", "32:03:0A:DA:11:DC", 8400)
     receive_thread = threading.Thread(target=c.handle_read)
     receive_thread.start()
     tkinter.mainloop()
@@ -124,3 +124,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+

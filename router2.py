@@ -27,7 +27,7 @@ routing_table = {
 }
 clients = []
 
-
+# Same as router
 class Router:
     def __init__(self) -> None:
         self.mac_eth0 = Mac("32:03:0A:CF:10:DB")

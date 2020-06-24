@@ -3,6 +3,7 @@
 import asyncore
 import logging
 import socket
+import sys
 import threading
 import tkinter
 
@@ -10,12 +11,14 @@ from common import *
 
 
 class Client:
-    def __init__(self, mac_client: str, ip_client: str) -> None:
+    def __init__(
+        self, mac_client: str, ip_client: str, mac_gateway: str, gateway_port: str
+    ) -> None:
         self.mac_client = Mac(mac_client)
         self.ip_client = IP(ip_client)
         self.ip_server = IP("195.1.10.10")
-        self.mac_gateway = Mac("32:03:0A:DA:11:DC")
-        self.default_gateway = ("localhost", 8400)
+        self.mac_gateway = Mac(mac_gateway)
+        self.default_gateway = ("localhost", int(gateway_port))
 
         self.logger = logging.getLogger(f"Client {self.ip_client} ")
 
@@ -23,16 +26,22 @@ class Client:
         self.window.title(f"{self.ip_client}")
         self.messages_frame = tkinter.Frame(self.window)
         self.message = tkinter.StringVar()
-        # self.message.set("Write here your message")
+        self.to_ip = tkinter.StringVar()
+        self.to_ip.set("Write here client ip, message option must be selected")
+        self.message.set("Write here your message")
         self.scrollbar = tkinter.Scrollbar(self.messages_frame)
         self.msg_list = tkinter.Listbox(
-            self.messages_frame, height=15, width=50, yscrollcommand=self.scrollbar.set
+            self.messages_frame, height=15, width=80, yscrollcommand=self.scrollbar.set
         )
         self.scrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
         self.msg_list.pack(side=tkinter.LEFT, fill=tkinter.BOTH)
         self.msg_list.pack()
         self.messages_frame.pack()
-        self.entry_field = tkinter.Entry(self.window, textvariable=self.message)
+        self.entry_field = tkinter.Entry(
+            self.window, width=80, textvariable=self.message
+        )
+        self.entry_ip = tkinter.Entry(self.window, width=80, textvariable=self.to_ip)
+        self.entry_ip.pack()
         # leghiamo la funzione send al tasto Return
         self.entry_field.bind("<Return>", self.send_message)
 
@@ -43,6 +52,14 @@ class Client:
         )
         # integriamo il tasto nel pacchetto
         send_button.pack()
+
+        self.options = tkinter.Listbox(self.window)
+        self.options.insert(1, "online")
+        self.options.insert(2, "offline")
+        self.options.insert(3, "get_clients")
+        self.options.insert(4, "message")
+        self.options.insert(5, "broadcast")
+        self.options.pack()
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect(self.default_gateway)
@@ -58,7 +75,7 @@ class Client:
             try:
                 data = self.socket.recv(512)
                 self.logger.debug(f"handle_read() -> {data}")
-                self.msg_list.insert(tkinter.END, data)
+                self.msg_list.insert(tkinter.END, data[header.sizeof() :])
             except:
                 self.handle_close()
                 exit(0)
@@ -75,7 +92,13 @@ class Client:
                 self.data_to_write.append(remaining)
 
     def send_message(self):
-        self.data_to_write.append(self.message.get().encode())
+        sel = self.options.get(self.options.curselection()[0])
+        print(f"{self.to_ip.get()}")
+        if sel == "message":
+            sel += ":" + self.to_ip.get() + "," + self.message.get()
+        elif sel == "broadcast":
+            sel += ":" + self.message.get()
+        self.data_to_write.append(sel.encode())
         self.handle_write()
 
     def __build_header(self) -> bytes:
@@ -89,16 +112,11 @@ class Client:
         )
 
 
-class GUI:
-    def __init__(self, client: Client) -> None:
-        self.client = client
-
-
 def main():
     logging.basicConfig(
         level=logging.DEBUG, format="%(name)s:[%(levelname)s]: %(message)s"
     )
-    c = Client("42:A3:1B:DA:12:AC", "1.5.10.15")
+    c = Client("42:A3:1B:DA:12:AC", "1.5.10.5", "32:03:0A:DA:11:DC", 8400)
     receive_thread = threading.Thread(target=c.handle_read)
     receive_thread.start()
     tkinter.mainloop()
@@ -106,3 +124,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
