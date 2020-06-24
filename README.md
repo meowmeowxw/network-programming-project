@@ -28,7 +28,7 @@ Ogni client ha una semplice GUI, le opzioni sono:
 4. Message -> Si può mandare un messaggio privato a un altro client, in una textbox è necessario inserire il messaggio da mandare e nell'altra l'IP del client di destinazione.
 5. Broadcast -> Si può mandare un messaggio a tutti i client online.
 
-Per usare queste opzioni è necessario selezionare la listbox prima di premere il tasto "send".
+**IMPORTANTE**: Per usare queste opzioni è necessario selezionare la listbox prima di premere il tasto "send".
 
 Il client è single-thread poichè l'unica connessione che deve fare è al server (tramite il router).
 
@@ -55,6 +55,6 @@ ovvero quando due client hanno lo stesso MAC, tramite un apposita arp table.
 ## Server
 
 Il server è asincrono e anch'esso basato su asyncore. Tiene una lista di client attivi e riesce
-a parsare i vari tipi di messaggio ricevuti e fare comunicare  con il supporto dei
-router i vari client nella rete.
+a parsare i vari tipi di messaggio ricevuti e fare comunicare i client nella rete
+con il supporto dei router.
 
