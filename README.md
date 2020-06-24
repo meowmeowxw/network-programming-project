@@ -9,7 +9,7 @@ Per lanciare tutti i componenti presenti nel disegno di rete ho creato lo script
 
 ## Librerie
 
-L'unica libreria esterne usata è [construct](https://pypi.org/project/construct/)
+L'unica libreria esterna di python usata è [construct](https://pypi.org/project/construct/)
 
 `pip install -r requirements.txt`
 
@@ -19,9 +19,13 @@ Questa libreria mi permette di fare un parsing efficace dei pacchetti del tipo:
 mac src | mac dst | ip src | ip dst
 ```
 
+Su arch linux è inoltre necessario installare tkinter con:
+
+`sudo pacman -S tk`
+
 ## Clients
 
-Ogni client ha una semplice GUI, le opzioni sono:
+Ogni client ha una semplice GUI con tkinter, le opzioni sono:
 
 1. Online -> Si riferisce al server che il client è online, questo pacchetto è mandato di default all'avvio del client.
 2. Offline -> Si riferisce al server che il client è offline.
