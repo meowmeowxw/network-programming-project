@@ -122,8 +122,6 @@ header = Struct(
     "ip_dst" / Bytes(4),
 )
 
-message = Struct(Enum(Byte, online=1, offline=2, message=3))
-
 
 class Header(Container):
     def __setitem__(self, key, item):
@@ -144,5 +142,3 @@ class Header(Container):
             else:
                 s += f"{k}: {IP(v)} | "
         return s
-
-

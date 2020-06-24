@@ -88,3 +88,18 @@ Il server è asincrono e anch'esso basato su asyncore. Tiene una lista di client
 a parsare i vari tipi di messaggio ricevuti e fare comunicare i client nella rete
 con il supporto dei router.
 
+## Common
+
+Ho creato due classi che uso per generare l'header, queste sono `IP` e `Mac`
+presenti in [common.py](./common.py)
+
+> Perchè?
+
+Queste classi mi permettono di convertire un ip/mac address in stringa definendo il
+metodo `__str__()`. Inoltre effettuano la conversione stringa <--> bytes. Entrambe
+accettano due tipi di argomenti diversi in ingresso: ip e bytes.
+In questo modo ho una maggiore flessibilità.
+
+Ho creato anche un dizionario `ARPTable`, in modo da definire la rappresentazione
+in stringa del dizionario sempre con `__str__()`.
+
