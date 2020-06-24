@@ -38,6 +38,7 @@ routing_table = {
 clients = []
 
 
+# Router 1
 class Router:
     def __init__(self) -> None:
         self.mac_eth0 = Mac("55:04:0A:EF:11:CF")
@@ -61,6 +62,7 @@ class Router:
             print(f"client_info[0]: {client_info[0]}")
             if client_info is not None:
                 self.logger.debug(f"handle_accept() -> {client_info[1]}")
+                # Pass connection the client handler
                 ClientHandler(client_info[0], client_info[1])
 
 
@@ -74,6 +76,7 @@ class ClientHandler(asyncore.dispatcher):
     def writable(self):
         return bool(self.data_to_write)
 
+    # Write data back to client
     def handle_write(self) -> None:
         data = self.data_to_write.pop()
         sent = self.send(data[:1024])
@@ -82,6 +85,7 @@ class ClientHandler(asyncore.dispatcher):
             self.data_to_write.append(remaining)
         self.logger.debug('handle_write() -> (%d) "%s"', sent, data[:sent].rstrip())
 
+    # Read data from the client
     def handle_read(self) -> None:
         data = self.recv(1024)
         hdr = header.parse(data)
@@ -91,20 +95,25 @@ class ClientHandler(asyncore.dispatcher):
         )
         mac_src = hdr.get("mac_src")
         ip_src = hdr.get("ip_src")
+        # Add MAC, IP to ARP and check MAC Spoofing
         if mac_src not in arp_table.keys():
             arp_table[mac_src] = ip_src
         else:
             if ip_src != arp_table.get(mac_src):
                 self.logger.debug(f"MAC Spoofing detected -> {IP(ip_src)}")
 
+        # Check destination, if it's the first time create the socket connect to
+        # the destination
         ip_dst = IP(hdr.get("ip_dst"))
         if self.first_time:
             sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.logger.debug(f"connecting to {ip_dst}")
             sck.connect(routing_table.get(ip_dst.ip)[0])
+            # Pass connection to the server handler
             self.server = ServerHandler(sck, self)
             self.first_time = False
 
+        # Where the packet should go? use routing table
         tmp = routing_table.get(ip_dst.ip, None)
         if tmp == None:
             mac_dst = routing_table.get(ip_dst.ip[:-1])[1].mac
@@ -112,6 +121,7 @@ class ClientHandler(asyncore.dispatcher):
         else:
             mac_dst = tmp[1].mac
             mac_src = tmp[2].mac
+        # Sobstitute MAC SRC and DST
         hdr["mac_dst"] = mac_dst
         hdr["mac_src"] = mac_src
         self.logger.debug(f"ARP Table: {arp_table}")
@@ -144,6 +154,7 @@ class ServerHandler(asyncore.dispatcher):
         self.logger.debug(
             f"handle_read() -> {len(data)}\t {print_container(hdr)}\t {payload}"
         )
+        # Add data to write to the client through the client handler
         self.client.data_to_write.append(data)
 
     def handle_close(self) -> None:
