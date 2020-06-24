@@ -1,5 +1,7 @@
 # Progetto Traccia 1
 
+Progetto per l'esame di programmazione di reti.
+
 ![](./design.png)
 
 Per lanciare tutti i componenti presenti nel disegno di rete ho creato lo script
@@ -7,7 +9,7 @@ Per lanciare tutti i componenti presenti nel disegno di rete ho creato lo script
 
 ## Librerie
 
-Le librerie esterne usate sono [construct](https://pypi.org/project/construct/)
+L'unica libreria esterne usata è [construct](https://pypi.org/project/construct/)
 
 `pip install -r requirements.txt`
 
