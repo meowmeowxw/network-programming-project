@@ -26,7 +26,7 @@ Su arch linux è inoltre necessario installare tkinter con:
 
 `sudo pacman -S tk`
 
-## Clients
+## [Clients](./client-args.py)
 
 Ogni client ha una semplice GUI sviluppata con tkinter, le opzioni sono:
 
@@ -40,7 +40,7 @@ Ogni client ha una semplice GUI sviluppata con tkinter, le opzioni sono:
 
 Il client è single-thread poichè l'unica connessione che deve fare è al server (tramite il router).
 
-## Router
+## [Router](./router1.py)
 
 I router sono asincroni e sono basati su [asyncore](https://docs.python.org/3/library/asyncore.html).
 Il metodo asincrono permette:
@@ -56,7 +56,7 @@ Gli svantaggi sono:
 Ogni client si collega al router della propria LAN, ogni connessione viene poi delegata al `ClientHandler`.
 Quest'ultimo poi leggerà il pacchetto con l'ip di destinazione e in base alla
 routing table aprirà una connessione all'ip indicato con un nuovo socket.
-Nel caso del router1 si aprirà una nuova connessione al server, mentre il router 2
+Nel caso del router1 si aprirà una nuova connessione al server, mentre il router2
 si connetterà al router1 poichè è il default gateway del server.
 
 Questa nuova connessione router1 <--> server o router1 <--> router2 viene poi
@@ -82,22 +82,21 @@ client5 <---5--> router2 <-|
 Il router implementa anche un meccanismo per riconoscere un attacco di tipo MAC Spoofing,
 ovvero quando due client hanno lo stesso MAC, tramite un apposita arp table.
 
-## Server
+## [Server](./server.py)
 
 Il server è asincrono e anch'esso basato su asyncore. Tiene una lista di client attivi e riesce
 a parsare i vari tipi di messaggio ricevuti e fare comunicare i client nella rete
 con il supporto dei router.
 
-## Common
+## [Common](./common.py)
 
-Ho creato due classi che uso per generare l'header, queste sono `IP` e `Mac`
-presenti in [common.py](./common.py)
+Ho creato due classi che uso per generare l'header: `IP` e `Mac`.
 
 > Perchè?
 
 Queste classi mi permettono di convertire un ip/mac address in stringa definendo il
 metodo `__str__()`. Inoltre effettuano la conversione stringa <--> bytes. Entrambe
-accettano due tipi di argomenti diversi in ingresso: ip e bytes.
+accettano due tipi di argomenti diversi in ingresso: `str` e `bytes`.
 In questo modo ho una maggiore flessibilità.
 
 Ho creato anche un dizionario `ARPTable`, in modo da definire la rappresentazione
