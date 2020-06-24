@@ -83,11 +83,10 @@ class Server(asyncore.dispatcher):
                 self.first_time = False
 
             if data.startswith(b"online"):
-                if not self.online:
-                    online_clients.add(self.ip_client)
+                online_clients.add(self.ip_client)
                 self.online = True
             elif data.startswith(b"offline"):
-                if self.online:
+                if self.ip_client in online_clients:
                     online_clients.remove(self.ip_client)
                 self.online = False
             # Send list of active clients
