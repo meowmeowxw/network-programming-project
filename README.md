@@ -3,8 +3,7 @@
 ![](./design.png)
 
 Per lanciare tutti i componenti presenti nel disegno di rete ho creato lo script
-[launcher.sh](./launcher.sh), testato su arch linux 5.7.3-arch1-1 x86-64 e versione
-python: 3.8.3
+[launcher.sh](./launcher.sh), testato su arch linux 5.7.3-arch1-1 x86-64 e python 3.8.3
 
 ## Librerie
 
