@@ -52,6 +52,8 @@ Ogni client ha una semplice GUI sviluppata con tkinter, le opzioni sono:
 
 [![Usage video](https://i.imgur.com/exOhTkW.png)](https://vimeo.com/432428646)
 
+https://vimeo.com/432428646
+
 Il client è single-thread poichè l'unica connessione che deve fare è al server (tramite il router).
 
 ## [Router](./router1.py)
