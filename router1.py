@@ -80,6 +80,7 @@ class ClientHandler(asyncore.dispatcher):
     def handle_write(self) -> None:
         data = self.data_to_write.pop()
         sent = self.send(data[:1024])
+        # Append remaining data
         if sent < len(data):
             remaining = data[sent:]
             self.data_to_write.append(remaining)
@@ -95,7 +96,7 @@ class ClientHandler(asyncore.dispatcher):
         )
         mac_src = hdr.get("mac_src")
         ip_src = hdr.get("ip_src")
-        # Add MAC, IP to ARP and check MAC Spoofing
+        # Add (MAC, IP) to ARP and check MAC Spoofing
         if mac_src not in arp_table.keys():
             arp_table[mac_src] = ip_src
         else:
@@ -113,7 +114,8 @@ class ClientHandler(asyncore.dispatcher):
             self.server = ServerHandler(sck, self)
             self.first_time = False
 
-        # Where the packet should go? use routing table
+        # Where the packet should go? use routing table to change mac addresses
+        # of the packet and get the socket destination.
         tmp = routing_table.get(ip_dst.ip, None)
         if tmp == None:
             mac_dst = routing_table.get(ip_dst.ip[:-1])[1].mac
@@ -121,11 +123,12 @@ class ClientHandler(asyncore.dispatcher):
         else:
             mac_dst = tmp[1].mac
             mac_src = tmp[2].mac
-        # Sobstitute MAC SRC and DST
+        # Sobstitute MAC src and dst
         hdr["mac_dst"] = mac_dst
         hdr["mac_src"] = mac_src
         self.logger.debug(f"ARP Table: {arp_table}")
         self.logger.debug(f"Packet new: {print_container(hdr)}")
+        # Add data to send from the router to the server
         self.server.data_to_write.append(header.build(hdr) + payload)
 
 

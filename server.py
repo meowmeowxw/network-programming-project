@@ -38,6 +38,7 @@ class Server(asyncore.dispatcher):
             self.first_time = True
             self.logger = logging.getLogger(f"Client -> {address}")
             self.ip_client = None
+            # Status of the client
             self.online = True
             # self.data_to_write = [b"Server: welcome back"]
             self.data_to_write = []
@@ -45,6 +46,7 @@ class Server(asyncore.dispatcher):
         def writable(self):
             return bool(self.data_to_write)
 
+        # Utility method to add data to send with the header
         def add_data(self, data: bytes) -> None:
             self.data_to_write.append(self.__build_header(self.ip_client) + data)
 
@@ -57,7 +59,7 @@ class Server(asyncore.dispatcher):
                 self.data_to_write.append(remaining)
             self.logger.debug('handle_write() -> (%d) "%s"', sent, data[:sent].rstrip())
 
-        # Read and parse message
+        # Read message
         def handle_read(self) -> None:
             data = self.recv(1024)
             hdr = header.parse(data)
@@ -70,6 +72,15 @@ class Server(asyncore.dispatcher):
         def handle_close(self) -> None:
             self.logger.debug("handle_close()")
             self.close()
+
+        """
+        Parse message of 5 different types:
+        1. online -> The client is online
+        2. offline -> The client is offline
+        3. get_clients -> Return the list of online clients
+        4. message -> Write private message to a client
+        5. broadcast -> Write message to everybody
+        """
 
         def __parse_message(self, header: Container, data: bytes) -> None:
             # Say welcome to the new client, and informs the other clients
@@ -93,13 +104,16 @@ class Server(asyncore.dispatcher):
             elif data.startswith(b"get_clients"):
                 f = ",".join(str(i) for i in online_clients)
                 self.add_data(f.encode())
-            # Send private message to an ip specified in the destination
+            # Send private message to an ip specified in the destination If I'm
+            # online
             elif data.startswith(b"message:"):
                 if self.online:
                     splitted = data.split(b",")
                     ip_dst = IP(splitted[0].decode().replace("message:", ""))
                     data_to_send = splitted[1]
                     self.logger.debug(f"sending {data_to_send} to {ip_dst}")
+                    # Search inside all the clients and check that the dst client
+                    # is online
                     for i in clients:
                         if i.ip_client.ip == ip_dst.ip:
                             if i.online:
@@ -115,11 +129,12 @@ class Server(asyncore.dispatcher):
                                 break
                 else:
                     self.add_data(b"> You are offline")
-            # Send public message to everyone
+            # Send public message to everyone If I'm online
             elif data.startswith(b"broadcast:"):
                 if self.online:
                     data_to_send = data.split(b":")[1]
                     for i in clients:
+                        # Only if the client is online
                         if i != self and i.online:
                             i.add_data(
                                 b"> "

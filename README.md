@@ -2,13 +2,25 @@
 
 Progetto per l'esame di programmazione di reti.
 
+## Feature richieste
+
 ![](./design.png)
+
+* Il server deve tenere traccia dei client che entrano e che escono dalla rete
+* Quando un client (attivo in rete) vuole inviare un messaggio ad un altro client, dovrà
+inviare il messaggio al server il quale consegnerà il messaggio al destinatario solo se il
+client destinatario è attivo, in alternativa restituirà un messaggio al mittente indicando
+che il client destinatario non è online
+* Gli headers IP ed Ethernet dovranno essere considerati nella versione semplificata
+ossia composti dai soli indirizzamenti IP e Mac Address
+
+## Testare il progetto
 
 Per lanciare tutti i componenti presenti nel disegno di rete ho creato lo script
 [launcher.sh](./launcher.sh), testato su arch linux 5.7.3-arch1-1 x86-64 e python 3.8.3
 
 Per killare tutti i processi lanciati: `killall python3` (a meno che si hanno altri
-processi con python3)
+processi attivi con python3)
 
 ## Librerie
 
@@ -79,14 +91,14 @@ client4 <-----4----| |  |_
 client5 <---5--> router2 <-|
 ```
 
-Il router implementa anche un meccanismo per riconoscere un attacco di tipo MAC Spoofing,
-ovvero quando due client hanno lo stesso MAC, tramite un apposita arp table.
+Il router implementa anche un meccanismo per riconoscere un attacco di tipo MAC
+Spoofing (quando due client hanno lo stesso MAC) tramite un apposita arp table.
 
 ## [Server](./server.py)
 
-Il server è asincrono e anch'esso basato su asyncore. Tiene una lista di client attivi e riesce
-a parsare i vari tipi di messaggio ricevuti e fare comunicare i client nella rete
-con il supporto dei router.
+Il server è asincrono e anch'esso basato su asyncore. Tiene una lista di client
+attivi e riesce a parsare i vari tipi di messaggio ricevuti e fare comunicare i
+client nella rete con il supporto dei router.
 
 ## [Common](./common.py)
 
