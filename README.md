@@ -19,6 +19,10 @@ ossia composti dai soli indirizzamenti IP e Mac Address
 Per lanciare tutti i componenti presenti nel disegno di rete ho creato lo script
 [launcher.sh](./launcher.sh), testato su arch linux 5.7.3-arch1-1 x86-64 e python 3.8.3
 
+In alternativa è possibile lanciare manualmente `router1.py`, `router2.py`, `server.py`
+e a scelta tra `client[1-6].py` o `client-args.py` (per generare un client tramite
+gli argomenti ai client come fatto in [launcher.sh](./launcher.sh)).
+
 Per killare tutti i processi lanciati: `killall python3` (a meno che si hanno altri
 processi attivi con python3)
 
