@@ -50,6 +50,8 @@ Ogni client ha una semplice GUI sviluppata con tkinter, le opzioni sono:
 
 **IMPORTANTE**: Per usare queste opzioni è necessario selezionare la listbox prima di premere il tasto "send".
 
+[![Usage video]()](https://vimeo.com/432428646)
+
 Il client è single-thread poichè l'unica connessione che deve fare è al server (tramite il router).
 
 ## [Router](./router1.py)
