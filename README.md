@@ -1,6 +1,6 @@
 # Progetto Traccia 1
 
-Progetto per l'esame di programmazione di reti.
+Progetto per l'esame di programmazione di reti. Finito -> Repository read-only.
 
 ## Feature richieste
 
